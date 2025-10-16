@@ -1,5 +1,5 @@
 {
-  "name": "skeleton_nestjs",
+  "name": "coconot-backend",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -7,12 +7,12 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "npm i --no-save @nestjs/cli",
-    "build": "nest build",
+    "build": "npx --yes @nestjs/cli build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/main.js",
     "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix"
   },
   "dependencies": {
