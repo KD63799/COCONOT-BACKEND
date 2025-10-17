@@ -7,6 +7,13 @@ export class OpenedWindowsDurationDto {
   @IsNotEmpty()
   hotHouseId: string;
 
+  /*
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  hotHouseName: string;
+  */
+
   @ApiProperty({ example: '08:30', description: "Heure d'ouverture (format HH:mm)" })
   @IsString()
   @IsNotEmpty()

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { DailyReport, DailyReportDocument } from './daily_reports.schema';
 import { CreateDailyReportDto } from './_utils/dto/request/create-daily-report.dto';
+import { DailyReport, DailyReportDocument } from './daily_reports.schema';
 
 @Injectable()
 export class DailyReportsService {
