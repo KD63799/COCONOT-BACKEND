@@ -1,20 +1,39 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { HumidityMeasureMapper } from './humidityMeasure.mapper';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { CreateHumidityMeasureDto } from './_utils/dto/request/create-humidity-measure.dto';
-import { GetHumidityMeasureResponseDto } from './_utils/dto/response/get-humidity-measure-response.dto';
+import { HotHousesService } from '../hothouses/hothouses.service';
 import { HumidityMeasuresRepository } from './humidity-measures.repository';
+import { HumidityMeasureMapper } from './humidityMeasure.mapper';
+import { DailyReportsService } from '../daily_reports/daily_reports.service';
+import { GetHumidityMeasureResponseDto } from './_utils/dto/response/get-humidity-measure-response.dto';
 
 @Injectable()
 export class HumidityMeasuresService {
   constructor(
     private readonly repository: HumidityMeasuresRepository,
     private readonly mapper: HumidityMeasureMapper,
+    @Inject(forwardRef(() => DailyReportsService)) // ✅ Utiliser @Inject + forwardRef
+    private readonly dailyReportsService: DailyReportsService,
+    private readonly hotHousesService: HotHousesService,
   ) {}
 
   async create(createDto: CreateHumidityMeasureDto): Promise<GetHumidityMeasureResponseDto> {
     const entity = this.mapper.toEntity(createDto);
     const created = await this.repository.create(entity);
-    return this.mapper.toResponseDto(created);
+    const response = this.mapper.toResponseDto(created);
+
+    try {
+      const hotHouse = await this.hotHousesService.findOne(createDto.hotHouseId);
+      await this.dailyReportsService.addHumidityMeasure(
+        createDto.hotHouseId,
+        hotHouse.name,
+        response.id,
+        createDto.timestamp || new Date(),
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'ajout au rapport journalier:", error);
+    }
+
+    return response;
   }
 
   async findAll(): Promise<GetHumidityMeasureResponseDto[]> {

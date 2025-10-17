@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export type OpeningMeasureDocument = OpeningMeasure & Document;
+export type OpeningMeasureDocument = HydratedDocument<OpeningMeasure>;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class OpeningMeasure {
   @Prop({ type: Types.ObjectId, ref: 'HotHouse', required: true })
   hotHouseId: Types.ObjectId;

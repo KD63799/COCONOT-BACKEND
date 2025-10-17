@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export type DailyReportDocument = DailyReport & Document;
+export type DailyReportDocument = HydratedDocument<DailyReport>;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class DailyReport {
   @Prop({ type: Types.ObjectId, ref: 'HotHouse', required: true })
   hotHouseId: Types.ObjectId;
@@ -23,6 +27,7 @@ export class DailyReport {
   @Prop({
     type: [
       {
+        _id: false,
         hotHouseId: { type: String, required: true },
         openWindowTime: { type: String, required: true },
         closeWindowTime: { type: String, required: true },
@@ -36,8 +41,8 @@ export class DailyReport {
     closeWindowTime: string;
   }>;
 
-  @Prop({ type: Number, required: false, min: 0, max: 5, default: null })
-  rateOfTheDay?: number | null;
+  @Prop({ required: true, min: 0, max: 5 })
+  rateOfTheDay: number;
 
   @Prop({ required: true })
   date: Date;

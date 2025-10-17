@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { CreateTemperatureMeasureDto } from './_utils/dto/request/create-temperature-measure.dto';
+import { HotHousesService } from '../hothouses/hothouses.service';
+import { DailyReportsService } from '../daily_reports/daily_reports.service';
 import { TemperatureMeasuresRepository } from './temperature-measures.repository';
 import { TemperatureMeasureMapper } from './temperature-measures.mapper';
-import { CreateTemperatureMeasureDto } from './_utils/dto/request/create-temperature-measure.dto';
 import { GetTemperatureMeasureResponseDto } from './_utils/dto/response/get-temperature-measure-response.dto';
 
 @Injectable()
@@ -9,12 +11,29 @@ export class TemperatureMeasuresService {
   constructor(
     private readonly repository: TemperatureMeasuresRepository,
     private readonly mapper: TemperatureMeasureMapper,
+    @Inject(forwardRef(() => DailyReportsService)) // ✅ Utiliser @Inject + forwardRef
+    private readonly dailyReportsService: DailyReportsService,
+    private readonly hotHousesService: HotHousesService,
   ) {}
 
   async create(createDto: CreateTemperatureMeasureDto): Promise<GetTemperatureMeasureResponseDto> {
     const entity = this.mapper.toEntity(createDto);
     const created = await this.repository.create(entity);
-    return this.mapper.toResponseDto(created);
+    const response = this.mapper.toResponseDto(created);
+
+    try {
+      const hotHouse = await this.hotHousesService.findOne(createDto.hotHouseId);
+      await this.dailyReportsService.addTemperatureMeasure(
+        createDto.hotHouseId,
+        hotHouse.name,
+        response.id,
+        createDto.timestamp || new Date(),
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'ajout au rapport journalier:", error);
+    }
+
+    return response;
   }
 
   async findAll(): Promise<GetTemperatureMeasureResponseDto[]> {
