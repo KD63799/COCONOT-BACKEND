@@ -6,10 +6,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EnvironmentVariables, validateEnv } from './_utils/config/env.config';
 import { NodemailerModule } from './nodemailer/nodemailer.module';
-import { HothousesController } from './hothouses/hothouses.controller';
-import { HothousesModule } from './hothouses/hothouses.module';
 import { PredictionsModule } from './predictions/predictions.module';
 import { DailyReportsModule } from './daily_reports/daily_reports.module';
+import { HotHousesController } from './hothouses/hothouses.controller';
+import { HotHousesModule } from './hothouses/hothouses.module';
 
 @Module({
   imports: [
@@ -24,10 +24,10 @@ import { DailyReportsModule } from './daily_reports/daily_reports.module';
     AuthModule,
     UsersModule,
     NodemailerModule,
-    HothousesModule,
+    HotHousesModule,
     PredictionsModule,
     DailyReportsModule,
   ],
-  controllers: [AppController, HothousesController],
+  controllers: [AppController, HotHousesController],
 })
 export class AppModule {}

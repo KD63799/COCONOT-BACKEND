@@ -1,4 +1,7 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+
+export type HotHouseDocument = HotHouse & Document;
 
 @Schema({ timestamps: true })
 export class HotHouse {
@@ -30,3 +33,5 @@ export class HotHouse {
   @Prop({ required: true })
   humidityThresholdMin: number;
 }
+
+export const HotHouseSchema = SchemaFactory.createForClass(HotHouse);

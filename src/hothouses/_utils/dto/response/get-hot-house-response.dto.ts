@@ -1,4 +1,5 @@
-import { AddressDto, LocalisationGpsDto } from '../request/create-hot-house.dto';
+import { AddressDto } from '../../../../_utils/dto/adress.dto';
+import { LocalisationGpsDto } from '../../../../_utils/dto/localisation-gps.dto';
 
 export class GetHotHouseResponseDto {
   id: string;

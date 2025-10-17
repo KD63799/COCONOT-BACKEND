@@ -16,10 +16,14 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1').useGlobalPipes(new ValidationPipe(ValidationPipeOptionsConfig)).enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('COCONOT BACKEND API')
-    .setDescription('Routes description of the COCONOT BACKEND API')
+    .setTitle('HotHouse API')
+    .setDescription('API pour la gestion des serres intelligentes')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addTag('hothouses')
+    .addTag('temperature-measures')
+    .addTag('humidity-measures')
+    .addTag('daily-reports')
+    .addTag('predictions')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
