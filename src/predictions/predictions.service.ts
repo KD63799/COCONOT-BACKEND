@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Prediction, PredictionDocument } from './predictions.schema';
+
 import { CreatePredictionDto } from './_utils/dto/request/create-prediction.dto';
+import { GetPredictionResponseDto } from './_utils/dto/response/get-prediction-response.dto';
+import { PredictionsRepository } from './predictions.repository';
+import { PredictionMapper } from './predictions.mapper';
 
 @Injectable()
 export class PredictionsService {
-  constructor(@InjectModel(Prediction.name) private predictionModel: Model<PredictionDocument>) {}
+  constructor(
+    private readonly repository: PredictionsRepository,
+    private readonly mapper: PredictionMapper,
+  ) {}
 
-  async create(createDto: CreatePredictionDto): Promise<PredictionDocument> {
+  async create(createDto: CreatePredictionDto): Promise<GetPredictionResponseDto> {
     const invalidWindows = createDto.openedWindowsDurationsPredicted.filter(
       (window) => window.hotHouseId !== createDto.hotHouseId,
     );
@@ -19,55 +23,52 @@ export class PredictionsService {
       );
     }
 
-    const createdPrediction = new this.predictionModel(createDto);
-    return createdPrediction.save();
+    const entity = this.mapper.toEntity(createDto);
+    const created = await this.repository.create(entity);
+    return this.mapper.toResponseDto(created);
   }
 
-  async findAll(): Promise<PredictionDocument[]> {
-    return this.predictionModel.find().exec();
+  async findAll(): Promise<GetPredictionResponseDto[]> {
+    const docs = await this.repository.findAll();
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findByHotHouseId(hotHouseId: string): Promise<PredictionDocument[]> {
-    return this.predictionModel.find({ hotHouseId }).sort({ predictionDate: -1 }).exec();
+  async findByHotHouseId(hotHouseId: string): Promise<GetPredictionResponseDto[]> {
+    const docs = await this.repository.findByHotHouseId(hotHouseId);
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findTodayPredictions(): Promise<PredictionDocument[]> {
+  async findTodayPredictions(): Promise<GetPredictionResponseDto[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    return this.predictionModel
-      .find({
-        predictionDate: { $gte: today, $lt: tomorrow },
-      })
-      .exec();
+    const docs = await this.repository.findByDateRange(today, tomorrow);
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findByDate(date: string): Promise<PredictionDocument[]> {
+  async findByDate(date: string): Promise<GetPredictionResponseDto[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    return this.predictionModel
-      .find({
-        predictionDate: { $gte: startOfDay, $lte: endOfDay },
-      })
-      .exec();
+    const docs = await this.repository.findByDateRange(startOfDay, endOfDay);
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findOne(id: string): Promise<PredictionDocument> {
-    const prediction = await this.predictionModel.findById(id).exec();
-    if (!prediction) {
+  async findOne(id: string): Promise<GetPredictionResponseDto> {
+    const doc = await this.repository.findById(id);
+    if (!doc) {
       throw new NotFoundException(`Prediction with ID ${id} not found`);
     }
-    return prediction;
+    return this.mapper.toResponseDto(doc);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.predictionModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    const deleted = await this.repository.delete(id);
+    if (!deleted) {
       throw new NotFoundException(`Prediction with ID ${id} not found`);
     }
   }

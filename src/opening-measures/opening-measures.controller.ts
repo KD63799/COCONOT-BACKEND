@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { OpeningMeasuresService } from './opeaning-measures.service';
+import { OpeningMeasuresService } from './opening-measures.service';
 import { OpeningMeasureResponseDto } from './dto/response/opening-measure-response.dto';
 import { CreateOpeningMeasureDto } from './dto/request/create-opening-measure.dto';
 

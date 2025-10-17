@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Delete, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { TemperatureMeasuresService } from './temperature_measures.service';
+import { TemperatureMeasuresService } from './temperature-measures.service';
 import { CreateTemperatureMeasureDto } from './_utils/dto/request/create-temperature-measure.dto';
 import { GetTemperatureMeasureResponseDto } from './_utils/dto/response/get-temperature-measure-response.dto';
 

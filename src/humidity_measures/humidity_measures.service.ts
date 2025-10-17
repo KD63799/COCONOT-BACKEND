@@ -1,53 +1,52 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { HumidityMeasureMapper } from './humidityMeasure.mapper';
 import { CreateHumidityMeasureDto } from './_utils/dto/request/create-humidity-measure.dto';
-import { HumidityMeasure, HumidityMeasureDocument } from './humidity-measure.schema';
+import { GetHumidityMeasureResponseDto } from './_utils/dto/response/get-humidity-measure-response.dto';
+import { HumidityMeasuresRepository } from './humidity-measures.repository';
 
 @Injectable()
 export class HumidityMeasuresService {
   constructor(
-    @InjectModel(HumidityMeasure.name)
-    private humidityMeasureModel: Model<HumidityMeasureDocument>,
+    private readonly repository: HumidityMeasuresRepository,
+    private readonly mapper: HumidityMeasureMapper,
   ) {}
 
-  async create(createDto: CreateHumidityMeasureDto): Promise<HumidityMeasure> {
-    const createdMeasure = new this.humidityMeasureModel({
-      ...createDto,
-      timestamp: createDto.timestamp || new Date(),
-    });
-    return createdMeasure.save();
+  async create(createDto: CreateHumidityMeasureDto): Promise<GetHumidityMeasureResponseDto> {
+    const entity = this.mapper.toEntity(createDto);
+    const created = await this.repository.create(entity);
+    return this.mapper.toResponseDto(created);
   }
 
-  async findAll(): Promise<HumidityMeasure[]> {
-    return this.humidityMeasureModel.find().exec();
+  async findAll(): Promise<GetHumidityMeasureResponseDto[]> {
+    const docs = await this.repository.findAll();
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findByHotHouseId(hotHouseId: string): Promise<HumidityMeasure[]> {
-    return this.humidityMeasureModel.find({ hotHouseId }).sort({ timestamp: -1 }).exec();
+  async findByHotHouseId(hotHouseId: string): Promise<GetHumidityMeasureResponseDto[]> {
+    const docs = await this.repository.findByHotHouseId(hotHouseId);
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findByHotHouseIdAndDateRange(hotHouseId: string, startDate: Date, endDate: Date): Promise<HumidityMeasure[]> {
-    return this.humidityMeasureModel
-      .find({
-        hotHouseId,
-        timestamp: { $gte: startDate, $lte: endDate },
-      })
-      .sort({ timestamp: 1 })
-      .exec();
+  async findByHotHouseIdAndDateRange(
+    hotHouseId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<GetHumidityMeasureResponseDto[]> {
+    const docs = await this.repository.findByHotHouseIdAndDateRange(hotHouseId, startDate, endDate);
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findOne(id: string): Promise<HumidityMeasure> {
-    const measure = await this.humidityMeasureModel.findById(id).exec();
-    if (!measure) {
+  async findOne(id: string): Promise<GetHumidityMeasureResponseDto> {
+    const doc = await this.repository.findById(id);
+    if (!doc) {
       throw new NotFoundException(`HumidityMeasure with ID ${id} not found`);
     }
-    return measure;
+    return this.mapper.toResponseDto(doc);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.humidityMeasureModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    const deleted = await this.repository.delete(id);
+    if (!deleted) {
       throw new NotFoundException(`HumidityMeasure with ID ${id} not found`);
     }
   }

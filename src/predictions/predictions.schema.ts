@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export type PredictionDocument = Prediction & Document;
+export type PredictionDocument = HydratedDocument<Prediction>;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class Prediction {
   @Prop({ type: Types.ObjectId, ref: 'HotHouse', required: true })
   hotHouseId: Types.ObjectId;
@@ -11,6 +15,7 @@ export class Prediction {
   @Prop({
     type: [
       {
+        _id: false,
         hotHouseId: { type: String, required: true },
         openWindowTime: { type: String, required: true },
         closeWindowTime: { type: String, required: true },

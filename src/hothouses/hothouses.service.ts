@@ -1,53 +1,56 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { GetHotHouseResponseDto } from './_utils/dto/response/get-hot-house-response.dto';
 import { HotHouseWithPredictionResponseDto } from './_utils/dto/response/get-hot-house-with-prediction-response.dto';
 import { PredictionsService } from '../predictions/predictions.service';
-import { HotHouse, HotHouseDocument } from './hothouses.schema';
+import { HotHousesRepository } from './hothouses.repository';
+import { HotHouseMapper } from './hothouses.mapper';
 import { CreateHotHouseDto } from './_utils/dto/request/create-hot-house.dto';
 import { UpdateHotHouseDto } from './_utils/dto/request/update-hot-house.dto';
 
 @Injectable()
 export class HotHousesService {
   constructor(
-    @InjectModel(HotHouse.name) private hotHouseModel: Model<HotHouseDocument>,
-    private predictionsService: PredictionsService,
+    private readonly repository: HotHousesRepository,
+    private readonly mapper: HotHouseMapper,
+    private readonly predictionsService: PredictionsService,
   ) {}
 
-  async create(createHotHouseDto: CreateHotHouseDto): Promise<HotHouseDocument> {
-    const createdHotHouse = new this.hotHouseModel(createHotHouseDto);
-    return createdHotHouse.save();
+  async create(createDto: CreateHotHouseDto): Promise<GetHotHouseResponseDto> {
+    const entity = this.mapper.toEntity(createDto);
+    const created = await this.repository.create(entity);
+    return this.mapper.toResponseDto(created);
   }
 
-  async findAll(): Promise<HotHouseDocument[]> {
-    return this.hotHouseModel.find().exec();
+  async findAll(): Promise<GetHotHouseResponseDto[]> {
+    const docs = await this.repository.findAll();
+    return this.mapper.toResponseDtoArray(docs);
   }
 
-  async findOne(id: string): Promise<HotHouseDocument> {
-    const hotHouse = await this.hotHouseModel.findById(id).exec();
-    if (!hotHouse) {
+  async findOne(id: string): Promise<GetHotHouseResponseDto> {
+    const doc = await this.repository.findById(id);
+    if (!doc) {
       throw new NotFoundException(`HotHouse with ID ${id} not found`);
     }
-    return hotHouse;
+    return this.mapper.toResponseDto(doc);
   }
 
-  async update(id: string, updateHotHouseDto: UpdateHotHouseDto): Promise<HotHouseDocument> {
-    const updatedHotHouse = await this.hotHouseModel.findByIdAndUpdate(id, updateHotHouseDto, { new: true }).exec();
-    if (!updatedHotHouse) {
+  async update(id: string, updateDto: UpdateHotHouseDto): Promise<GetHotHouseResponseDto> {
+    const updated = await this.repository.update(id, updateDto);
+    if (!updated) {
       throw new NotFoundException(`HotHouse with ID ${id} not found`);
     }
-    return updatedHotHouse;
+    return this.mapper.toResponseDto(updated);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.hotHouseModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    const deleted = await this.repository.delete(id);
+    if (!deleted) {
       throw new NotFoundException(`HotHouse with ID ${id} not found`);
     }
   }
 
   async findAllWithTodayPredictions(): Promise<HotHouseWithPredictionResponseDto[]> {
-    const hotHouses = await this.findAll();
+    const hotHouses = await this.repository.findAll();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -56,7 +59,7 @@ export class HotHousesService {
     const results: HotHouseWithPredictionResponseDto[] = [];
 
     for (const hotHouse of hotHouses) {
-      const predictions = await this.predictionsService.findByHotHouseId(hotHouse.id);
+      const predictions = await this.predictionsService.findByHotHouseId(hotHouse._id.toString());
 
       const todayPrediction = predictions.find((pred) => {
         const predDate = new Date(pred.predictionDate);
@@ -64,28 +67,8 @@ export class HotHousesService {
       });
 
       results.push({
-        hotHouse: {
-          id: hotHouse.id,
-          name: hotHouse.name,
-          address: hotHouse.address,
-          location: hotHouse.location,
-          temperatureThresholdMax: hotHouse.temperatureThresholdMax,
-          temperatureThresholdMin: hotHouse.temperatureThresholdMin,
-          humidityThresholdMax: hotHouse.humidityThresholdMax,
-          humidityThresholdMin: hotHouse.humidityThresholdMin,
-          createdAt: hotHouse.createdAt,
-          updatedAt: hotHouse.updatedAt,
-        },
-        predictionsOfTheDay: todayPrediction
-          ? {
-              id: todayPrediction.id,
-              hotHouseId: todayPrediction.hotHouseId.toString(),
-              openedWindowsDurationsPredicted: todayPrediction.openedWindowsDurationsPredicted,
-              predictionDate: todayPrediction.predictionDate,
-              createdAt: todayPrediction.createdAt,
-              updatedAt: todayPrediction.updatedAt,
-            }
-          : null,
+        hotHouse: this.mapper.toResponseDto(hotHouse),
+        predictionsOfTheDay: todayPrediction || null,
       });
     }
 
@@ -93,7 +76,11 @@ export class HotHousesService {
   }
 
   async findOneWithTodayPrediction(id: string): Promise<HotHouseWithPredictionResponseDto> {
-    const hotHouse = await this.findOne(id);
+    const hotHouse = await this.repository.findById(id);
+    if (!hotHouse) {
+      throw new NotFoundException(`HotHouse with ID ${id} not found`);
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -106,28 +93,8 @@ export class HotHousesService {
     });
 
     return {
-      hotHouse: {
-        id: hotHouse.id,
-        name: hotHouse.name,
-        address: hotHouse.address,
-        location: hotHouse.location,
-        temperatureThresholdMax: hotHouse.temperatureThresholdMax,
-        temperatureThresholdMin: hotHouse.temperatureThresholdMin,
-        humidityThresholdMax: hotHouse.humidityThresholdMax,
-        humidityThresholdMin: hotHouse.humidityThresholdMin,
-        createdAt: hotHouse.createdAt,
-        updatedAt: hotHouse.updatedAt,
-      },
-      predictionsOfTheDay: todayPrediction
-        ? {
-            id: todayPrediction.id,
-            hotHouseId: todayPrediction.hotHouseId.toString(),
-            openedWindowsDurationsPredicted: todayPrediction.openedWindowsDurationsPredicted,
-            predictionDate: todayPrediction.predictionDate,
-            createdAt: todayPrediction.createdAt,
-            updatedAt: todayPrediction.updatedAt,
-          }
-        : null,
+      hotHouse: this.mapper.toResponseDto(hotHouse),
+      predictionsOfTheDay: todayPrediction || null,
     };
   }
 }

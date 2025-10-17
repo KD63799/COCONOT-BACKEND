@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
-export type HumidityMeasureDocument = HumidityMeasure & Document;
+export type HumidityMeasureDocument = HydratedDocument<HumidityMeasure>;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class HumidityMeasure {
   @Prop({ type: Types.ObjectId, ref: 'HotHouse', required: true })
   hotHouseId: Types.ObjectId;
@@ -16,6 +20,9 @@ export class HumidityMeasure {
 
   @Prop({ required: true, default: Date.now })
   timestamp: Date;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const HumidityMeasureSchema = SchemaFactory.createForClass(HumidityMeasure);

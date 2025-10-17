@@ -4,11 +4,13 @@ import { HotHousesService } from './hothouses.service';
 import { HotHousesController } from './hothouses.controller';
 import { PredictionsModule } from '../predictions/predictions.module';
 import { HotHouse, HotHouseSchema } from './hothouses.schema';
+import { HotHousesRepository } from './hothouses.repository';
+import { HotHouseMapper } from './hothouses.mapper';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: HotHouse.name, schema: HotHouseSchema }]), PredictionsModule],
   controllers: [HotHousesController],
-  providers: [HotHousesService],
+  providers: [HotHousesService, HotHousesRepository, HotHouseMapper],
   exports: [HotHousesService],
 })
 export class HotHousesModule {}

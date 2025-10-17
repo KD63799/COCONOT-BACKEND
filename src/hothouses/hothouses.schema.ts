@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export type HotHouseDocument = HotHouse & Document;
+export type HotHouseDocument = HydratedDocument<HotHouse>;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
 export class HotHouse {
   @Prop({ required: true })
   name: string;
@@ -33,10 +37,7 @@ export class HotHouse {
   @Prop({ required: true })
   humidityThresholdMin: number;
 
-  @Prop()
   createdAt: Date;
-
-  @Prop()
   updatedAt: Date;
 }
 
