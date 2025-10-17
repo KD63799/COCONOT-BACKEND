@@ -17,6 +17,7 @@ export class DailyReport {
   @Prop({
     type: [
       {
+        hotHouseId: String,
         openWindowTime: String,
         closeWindowTime: String,
       },
@@ -24,6 +25,7 @@ export class DailyReport {
     default: [],
   })
   openedWindowsDurations: Array<{
+    hotHouseId?: string; // 🆕
     openWindowTime: string;
     closeWindowTime: string;
   }>;
@@ -37,10 +39,7 @@ export class DailyReport {
   @Prop({ type: Types.ObjectId, ref: 'Prediction', required: false })
   predictionOfTheDay?: Types.ObjectId;
 
-  @Prop()
   createdAt: Date;
-
-  @Prop()
   updatedAt: Date;
 }
 

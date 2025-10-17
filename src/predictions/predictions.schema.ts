@@ -11,6 +11,7 @@ export class Prediction {
   @Prop({
     type: [
       {
+        hotHouseId: String,
         openWindowTime: String,
         closeWindowTime: String,
       },
@@ -18,6 +19,7 @@ export class Prediction {
     required: true,
   })
   openedWindowsDurationsPredicted: Array<{
+    hotHouseId?: string;
     openWindowTime: string;
     closeWindowTime: string;
   }>;
@@ -25,10 +27,7 @@ export class Prediction {
   @Prop({ required: true })
   predictionDate: Date;
 
-  @Prop()
   createdAt: Date;
-
-  @Prop()
   updatedAt: Date;
 }
 
