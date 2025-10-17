@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TemperatureMeasuresModule } from '../temperature_measures/temperature_measures.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { HumidityMeasure, HumidityMeasureSchema } from './humidity-measure.schema';
+import { HumidityMeasuresController } from './humidity_measures.controller';
+import { HumidityMeasuresService } from './humidity_measures.service';
 
 @Module({
-  imports: [TemperatureMeasuresModule],
+  imports: [MongooseModule.forFeature([{ name: HumidityMeasure.name, schema: HumidityMeasureSchema }])],
+  controllers: [HumidityMeasuresController],
+  providers: [HumidityMeasuresService],
+  exports: [HumidityMeasuresService],
 })
-export class DailyReportsModule {}
+export class HumidityMeasuresModule {}

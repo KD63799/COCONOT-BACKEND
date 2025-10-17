@@ -10,6 +10,8 @@ import { PredictionsModule } from './predictions/predictions.module';
 import { DailyReportsModule } from './daily_reports/daily_reports.module';
 import { HotHousesController } from './hothouses/hothouses.controller';
 import { HotHousesModule } from './hothouses/hothouses.module';
+import { TemperatureMeasuresModule } from './temperature_measures/temperature_measures.module';
+import { HumidityMeasuresModule } from './humidity_measures/humidity_measures.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { HotHousesModule } from './hothouses/hothouses.module';
     UsersModule,
     NodemailerModule,
     HotHousesModule,
+    TemperatureMeasuresModule,
+    HumidityMeasuresModule,
     PredictionsModule,
     DailyReportsModule,
   ],
