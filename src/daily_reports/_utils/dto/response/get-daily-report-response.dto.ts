@@ -1,15 +1,40 @@
-import { GetPredictionResponseDto } from '../../../../predictions/_utils/dto/response/get-prediction-response.dto';
-import { GetTemperatureMeasureResponseDto } from '../../../../temperature_measures/_utils/dto/response/get-temperature-measure-response.dto';
-import { GetHumidityMeasureResponseDto } from '../../../../humidity_measures/_utils/dto/response/get-humidity-measure-response.dto';
+import { ApiProperty } from '@nestjs/swagger';
 import { OpenedWindowsDurationDto } from '../../../../_utils/dto/opened-windows-duration.dto';
 
 export class DailyReportResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   hotHouseId: string;
-  temperatureMeasurements: GetTemperatureMeasureResponseDto[];
-  humidityMeasurements: GetHumidityMeasureResponseDto[];
+
+  @ApiProperty()
+  hotHouseName: string;
+
+  @ApiProperty()
+  isSubmitted: boolean;
+
+  @ApiProperty({ type: [String] })
+  temperatureMeasurements: string[];
+
+  @ApiProperty({ type: [String] })
+  humidityMeasurements: string[];
+
+  @ApiProperty({ type: [OpenedWindowsDurationDto] })
   openedWindowsDurations: OpenedWindowsDurationDto[];
+
+  @ApiProperty()
   rateOfTheDay: number;
+
+  @ApiProperty()
   date: Date;
-  predictionOfTheDay?: GetPredictionResponseDto;
+
+  @ApiProperty({ required: false })
+  predictionOfTheDay?: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
 }

@@ -8,6 +8,7 @@ import {
   IsDateString,
   ValidateNested,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -18,6 +19,16 @@ export class CreateDailyReportDto {
   @IsString()
   @IsNotEmpty()
   hotHouseId: string;
+
+  @ApiProperty({ example: 'Serre à fraises' }) // 🆕
+  @IsString()
+  @IsNotEmpty()
+  hotHouseName: string;
+
+  @ApiProperty({ example: false, default: false }) // 🆕
+  @IsBoolean()
+  @IsOptional()
+  isSubmitted?: boolean;
 
   @ApiProperty({ example: ['507f191e810c19729de860ea'], type: [String] })
   @IsArray()

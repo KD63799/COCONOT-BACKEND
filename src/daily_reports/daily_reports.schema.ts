@@ -8,6 +8,12 @@ export class DailyReport {
   @Prop({ type: Types.ObjectId, ref: 'HotHouse', required: true })
   hotHouseId: Types.ObjectId;
 
+  @Prop({ required: true })
+  hotHouseName: string;
+
+  @Prop({ required: true, default: false })
+  isSubmitted: boolean;
+
   @Prop({ type: [Types.ObjectId], ref: 'TemperatureMeasure', default: [] })
   temperatureMeasurements: Types.ObjectId[];
 

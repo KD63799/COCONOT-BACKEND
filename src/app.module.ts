@@ -12,6 +12,7 @@ import { HotHousesController } from './hothouses/hothouses.controller';
 import { HotHousesModule } from './hothouses/hothouses.module';
 import { TemperatureMeasuresModule } from './temperature_measures/temperature_measures.module';
 import { HumidityMeasuresModule } from './humidity_measures/humidity_measures.module';
+import { OpeningMeasuresModule } from './opening-measures/opening-measures.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { HumidityMeasuresModule } from './humidity_measures/humidity_measures.mo
     HotHousesModule,
     TemperatureMeasuresModule,
     HumidityMeasuresModule,
+    OpeningMeasuresModule,
     PredictionsModule,
     DailyReportsModule,
   ],

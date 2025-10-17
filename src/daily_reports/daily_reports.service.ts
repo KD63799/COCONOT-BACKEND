@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateDailyReportDto } from './_utils/dto/request/create-daily-report.dto';
+import { UpdateDailyReportDto } from './_utils/dto/request/update-daily-report.dto';
 import { DailyReport, DailyReportDocument } from './daily_reports.schema';
 
 @Injectable()
@@ -69,6 +70,34 @@ export class DailyReportsService {
       throw new NotFoundException(`DailyReport with ID ${id} not found`);
     }
     return report;
+  }
+
+  // 🆕 Ajouter la méthode UPDATE
+  async update(id: string, updateDto: UpdateDailyReportDto): Promise<DailyReportDocument> {
+    if (updateDto.openedWindowsDurations) {
+      const invalidWindows = updateDto.openedWindowsDurations.filter(
+        (window) => window.hotHouseId !== updateDto.hotHouseId,
+      );
+
+      if (invalidWindows.length > 0) {
+        throw new BadRequestException(
+          `Tous les hotHouseId dans openedWindowsDurations doivent correspondre au hotHouseId du rapport (${updateDto.hotHouseId})`,
+        );
+      }
+    }
+
+    const updatedReport = await this.dailyReportModel
+      .findByIdAndUpdate(id, updateDto, { new: true })
+      .populate('temperatureMeasurements')
+      .populate('humidityMeasurements')
+      .populate('predictionOfTheDay')
+      .exec();
+
+    if (!updatedReport) {
+      throw new NotFoundException(`DailyReport with ID ${id} not found`);
+    }
+
+    return updatedReport;
   }
 
   async remove(id: string): Promise<void> {

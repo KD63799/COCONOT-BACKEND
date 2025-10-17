@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateDailyReportDto } from './_utils/dto/request/create-daily-report.dto';
 import { DailyReportResponseDto } from './_utils/dto/response/get-daily-report-response.dto';
 import { DailyReportsService } from './daily_reports.service';
+import { UpdateDailyReportDto } from './_utils/dto/request/update-daily-report.dto';
 
 @ApiTags('daily-reports')
 @Controller('daily-reports')
@@ -51,5 +52,13 @@ export class DailyReportsController {
   @ApiResponse({ status: 204, description: 'Rapport supprimé' })
   remove(@Param('id') id: string) {
     return this.dailyReportsService.remove(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Mettre à jour un rapport journalier' })
+  @ApiResponse({ status: 200, type: DailyReportResponseDto })
+  @ApiResponse({ status: 404, description: 'Rapport non trouvé' })
+  update(@Param('id') id: string, @Body() updateDto: UpdateDailyReportDto) {
+    return this.dailyReportsService.update(id, updateDto);
   }
 }
