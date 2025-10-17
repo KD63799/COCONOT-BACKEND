@@ -24,6 +24,12 @@ export class Prediction {
 
   @Prop({ required: true })
   predictionDate: Date;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const PredictionSchema = SchemaFactory.createForClass(Prediction);

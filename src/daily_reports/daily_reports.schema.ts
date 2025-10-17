@@ -36,6 +36,12 @@ export class DailyReport {
 
   @Prop({ type: Types.ObjectId, ref: 'Prediction', required: false })
   predictionOfTheDay?: Types.ObjectId;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const DailyReportSchema = SchemaFactory.createForClass(DailyReport);

@@ -32,6 +32,12 @@ export class HotHouse {
 
   @Prop({ required: true })
   humidityThresholdMin: number;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const HotHouseSchema = SchemaFactory.createForClass(HotHouse);

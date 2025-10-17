@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HotHousesService } from './hothouses.service';
+import { HotHouseWithPredictionResponseDto } from './_utils/dto/response/get-hot-house-with-prediction-response.dto';
 import { CreateHotHouseDto } from './_utils/dto/request/create-hot-house.dto';
-import { UpdateHotHouseDto } from './_utils/dto/request/update-hot-house.dto';
 import { GetHotHouseResponseDto } from './_utils/dto/response/get-hot-house-response.dto';
+import { UpdateHotHouseDto } from './_utils/dto/request/update-hot-house.dto';
 
 @ApiTags('hothouses')
 @Controller('hothouses')
@@ -25,12 +26,35 @@ export class HotHousesController {
     return this.hotHousesService.findAll();
   }
 
+  @Get('with-predictions')
+  @ApiOperation({ summary: 'Récupérer toutes les serres avec leurs prédictions du jour' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des serres avec prédictions',
+    type: [HotHouseWithPredictionResponseDto],
+  })
+  findAllWithPredictions() {
+    return this.hotHousesService.findAllWithTodayPredictions();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer une serre par son ID' })
   @ApiResponse({ status: 200, description: 'Serre trouvée', type: GetHotHouseResponseDto })
   @ApiResponse({ status: 404, description: 'Serre non trouvée' })
   findOne(@Param('id') id: string) {
     return this.hotHousesService.findOne(id);
+  }
+
+  @Get(':id/with-prediction')
+  @ApiOperation({ summary: 'Récupérer une serre avec sa prédiction du jour' })
+  @ApiResponse({
+    status: 200,
+    description: 'Serre avec prédiction',
+    type: HotHouseWithPredictionResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Serre non trouvée' })
+  findOneWithPrediction(@Param('id') id: string) {
+    return this.hotHousesService.findOneWithTodayPrediction(id);
   }
 
   @Patch(':id')

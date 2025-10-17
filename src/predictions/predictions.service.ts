@@ -8,16 +8,16 @@ import { CreatePredictionDto } from './_utils/dto/request/create-prediction.dto'
 export class PredictionsService {
   constructor(@InjectModel(Prediction.name) private predictionModel: Model<PredictionDocument>) {}
 
-  async create(createDto: CreatePredictionDto): Promise<Prediction> {
+  async create(createDto: CreatePredictionDto): Promise<PredictionDocument> {
     const createdPrediction = new this.predictionModel(createDto);
     return createdPrediction.save();
   }
 
-  async findAll(): Promise<Prediction[]> {
+  async findAll(): Promise<PredictionDocument[]> {
     return this.predictionModel.find().exec();
   }
 
-  async findByHotHouseId(hotHouseId: string): Promise<Prediction[]> {
+  async findByHotHouseId(hotHouseId: string): Promise<PredictionDocument[]> {
     return this.predictionModel.find({ hotHouseId }).sort({ predictionDate: -1 }).exec();
   }
 
