@@ -11,15 +11,15 @@ export class Prediction {
   @Prop({
     type: [
       {
-        hotHouseId: String,
-        openWindowTime: String,
-        closeWindowTime: String,
+        hotHouseId: { type: String, required: true },
+        openWindowTime: { type: String, required: true },
+        closeWindowTime: { type: String, required: true },
       },
     ],
     required: true,
   })
   openedWindowsDurationsPredicted: Array<{
-    hotHouseId?: string;
+    hotHouseId: string;
     openWindowTime: string;
     closeWindowTime: string;
   }>;

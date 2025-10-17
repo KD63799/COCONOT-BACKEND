@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DailyReport, DailyReportDocument } from './daily_reports.schema';
@@ -8,12 +8,22 @@ import { CreateDailyReportDto } from './_utils/dto/request/create-daily-report.d
 export class DailyReportsService {
   constructor(@InjectModel(DailyReport.name) private dailyReportModel: Model<DailyReportDocument>) {}
 
-  async create(createDto: CreateDailyReportDto): Promise<DailyReport> {
+  async create(createDto: CreateDailyReportDto): Promise<DailyReportDocument> {
+    const invalidWindows = createDto.openedWindowsDurations.filter(
+      (window) => window.hotHouseId !== createDto.hotHouseId,
+    );
+
+    if (invalidWindows.length > 0) {
+      throw new BadRequestException(
+        `Tous les hotHouseId dans openedWindowsDurations doivent correspondre au hotHouseId du rapport (${createDto.hotHouseId})`,
+      );
+    }
+
     const createdReport = new this.dailyReportModel(createDto);
     return createdReport.save();
   }
 
-  async findAll(): Promise<DailyReport[]> {
+  async findAll(): Promise<DailyReportDocument[]> {
     return this.dailyReportModel
       .find()
       .populate('temperatureMeasurements')
@@ -22,7 +32,7 @@ export class DailyReportsService {
       .exec();
   }
 
-  async findByHotHouseId(hotHouseId: string): Promise<DailyReport[]> {
+  async findByHotHouseId(hotHouseId: string): Promise<DailyReportDocument[]> {
     return this.dailyReportModel
       .find({ hotHouseId })
       .populate('temperatureMeasurements')
@@ -32,7 +42,7 @@ export class DailyReportsService {
       .exec();
   }
 
-  async findByDate(date: string): Promise<DailyReport[]> {
+  async findByDate(date: string): Promise<DailyReportDocument[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -48,7 +58,7 @@ export class DailyReportsService {
       .exec();
   }
 
-  async findOne(id: string): Promise<DailyReport> {
+  async findOne(id: string): Promise<DailyReportDocument> {
     const report = await this.dailyReportModel
       .findById(id)
       .populate('temperatureMeasurements')

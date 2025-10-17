@@ -1,11 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class OpenedWindowsDurationDto {
-  @ApiProperty({ example: '68f200bc4b295453ea1bdfa6', required: false })
+  @ApiProperty({ example: '68f200bc4b295453ea1bdfa6' })
   @IsString()
-  @IsOptional()
-  hotHouseId?: string;
+  @IsNotEmpty()
+  hotHouseId: string;
 
   @ApiProperty({ example: '08:30', description: "Heure d'ouverture (format HH:mm)" })
   @IsString()
