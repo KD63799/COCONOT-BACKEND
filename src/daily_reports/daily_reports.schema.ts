@@ -36,8 +36,8 @@ export class DailyReport {
     closeWindowTime: string;
   }>;
 
-  @Prop({ required: true, min: 0, max: 5 })
-  rateOfTheDay: number;
+  @Prop({ type: Number, required: false, min: 0, max: 5, default: null })
+  rateOfTheDay?: number | null;
 
   @Prop({ required: true })
   date: Date;
