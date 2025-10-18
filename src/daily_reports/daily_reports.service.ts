@@ -64,7 +64,14 @@ export class DailyReportsService {
   ): Promise<DailyReportResponseDto> {
     const report = await this.findOrCreateDailyReport(hotHouseId, hotHouseName, date);
 
-    if (report.temperatureMeasurements.includes(measureId)) {
+    const alreadyExists = report.temperatureMeasurements.some((m) => {
+      if (typeof m === 'string') {
+        return m === measureId;
+      }
+      return m.id === measureId;
+    });
+
+    if (alreadyExists) {
       return report;
     }
 
@@ -83,7 +90,14 @@ export class DailyReportsService {
   ): Promise<DailyReportResponseDto> {
     const report = await this.findOrCreateDailyReport(hotHouseId, hotHouseName, date);
 
-    if (report.humidityMeasurements.includes(measureId)) {
+    const alreadyExists = report.humidityMeasurements.some((m) => {
+      if (typeof m === 'string') {
+        return m === measureId;
+      }
+      return m.id === measureId;
+    });
+
+    if (alreadyExists) {
       return report;
     }
 
@@ -183,6 +197,7 @@ export class DailyReportsService {
 
     return this.mapper.toResponseDto(updated);
   }
+
   async remove(id: string): Promise<void> {
     const deleted = await this.repository.delete(id);
     if (!deleted) {

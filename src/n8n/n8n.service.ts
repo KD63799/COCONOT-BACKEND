@@ -11,50 +11,87 @@ export class N8nService {
   private readonly webhookUrl = process.env.N8N_WEBHOOK_URL!;
   private readonly secret = process.env.N8N_WEBHOOK_SECRET || 'change_me';
 
-  constructor(@InjectModel(FailedWebhook.name) private failedWebhookModel: Model<FailedWebhookDocument>) {}
+  constructor(
+    // injection optionnelle : retire si tu ne veux/peux pas persister les échecs
+    @InjectModel(FailedWebhook.name) private failedWebhookModel?: Model<FailedWebhookDocument>,
+  ) {}
 
-  triggerWorkflowFireAndForget(payload: any, opts?: { correlationId?: string; idempotencyKey?: string }) {
-    const body = JSON.stringify(payload);
-    const signature = crypto.createHmac('sha256', this.secret).update(body).digest('hex');
+  /**
+   * Récupère les données à envoyer à n8n.
+   * Remplace l'implémentation par ton propre appel DB / service.
+   */
+  private async fetchReportsForDate(dateIso: string): Promise<any[]> {
+    // Exemple : appeler ton service / repo
+    // return this.reportsService.findByDate(dateIso);
+    // Pour l'exemple, retourne un tableau vide (à remplacer)
+    return [];
+  }
 
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-Hook-Signature': signature,
-      'Idempotency-Key': opts?.idempotencyKey ?? payload.id ?? `id-${Date.now()}`,
-      'X-Correlation-ID': opts?.correlationId ?? `cid-${Date.now()}`,
-    };
-
-    const axiosConfig: AxiosRequestConfig = {
-      headers,
-      timeout: 10000, // court timeout pour ne pas bloquer le worker
-      maxBodyLength: Infinity,
-    };
-
-    // Important: DO NOT return the promise to caller — we handle it here.
-    axios
-      .post(this.webhookUrl, payload, axiosConfig)
-      .then((response) => {
-        this.logger.log(
-          `n8n webhook accepted (status ${response.status}) — correlation=${headers['X-Correlation-ID']}`,
-        );
-        // Optionnel : stocker la réponse si besoin
-      })
-      .catch(async (err) => {
-        this.logger.error(`n8n webhook failed — correlation=${headers['X-Correlation-ID']}`, err?.stack ?? err);
-        // Sauvegarde pour retry / investigation (ex: collection Mongo)
-        try {
-          await this.failedWebhookModel.create({
-            correlationId: headers['X-Correlation-ID'],
-            idempotencyKey: headers['Idempotency-Key'],
-            payload,
-            error: err && err.message ? err.message : String(err),
-            createdAt: new Date(),
-          });
-        } catch (saveErr) {
-          this.logger.error('Failed to persist failed webhook', saveErr);
+  /**
+   * Envoie les rapports pour la date donnée vers n8n en fire-and-forget.
+   * IMPORTANT: la méthode ne doit PAS être awaitée par le caller (controller) pour éviter de bloquer l'iOS.
+   */
+  sendReportsForDateFireAndForget(dateIso: string, opts?: { correlationId?: string }) {
+    // 1) récupérer les données (on peut await ici car c'est local, mais on n'attend pas l'appel HTTP)
+    this.fetchReportsForDate(dateIso)
+      .then((reports) => {
+        if (!reports || reports.length === 0) {
+          this.logger.log(`Aucun rapport à envoyer pour ${dateIso}`);
+          return;
         }
+
+        const payload = reports; // selon ton format (ta sample JSON était un array root)
+        const bodyString = JSON.stringify(payload);
+        const signature = crypto.createHmac('sha256', this.secret).update(bodyString).digest('hex');
+
+        const idempotencyKey = `reports-${dateIso}`;
+        const correlationId = opts?.correlationId ?? `reports-${dateIso}-${Date.now()}`;
+
+        const headers = {
+          'Content-Type': 'application/json',
+          'X-Hook-Signature': signature,
+          'Idempotency-Key': idempotencyKey,
+          'X-Correlation-ID': correlationId,
+        };
+
+        const axiosConfig: AxiosRequestConfig = {
+          headers,
+          timeout: 5000, // court timeout pour ne pas bloquer trop longtemps
+          maxBodyLength: Infinity,
+        };
+
+        // Fire-and-forget: on ne retourne pas la promesse au caller
+        axios
+          .post(this.webhookUrl, payload, axiosConfig)
+          .then((res) => {
+            this.logger.log(`n8n webhook success status=${res.status} correlation=${correlationId}`);
+          })
+          .catch(async (err) => {
+            const errMsg = err?.response?.data ?? err?.message ?? String(err);
+            this.logger.error(`n8n webhook failed correlation=${correlationId} error=${errMsg}`);
+
+            // Optionnel : persister l'échec pour retry plus tard si model injecté
+            if (this.failedWebhookModel) {
+              try {
+                await this.failedWebhookModel.create({
+                  correlationId,
+                  idempotencyKey,
+                  payload,
+                  error: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg),
+                  retries: 0,
+                });
+                this.logger.log(`Failed webhook persisted correlation=${correlationId}`);
+              } catch (saveErr) {
+                this.logger.error('Failed to persist failed webhook', saveErr);
+              }
+            }
+          });
+      })
+      .catch((fetchErr) => {
+        // Erreur lors de la récupération des rapports
+        this.logger.error('Failed to fetch reports for date', fetchErr);
       });
 
-    // return nothing — fire-and-forget
+    // NOTA: on ne renvoie rien pour signaler au caller; caller renvoie déjà la réponse HTTP.
   }
 }

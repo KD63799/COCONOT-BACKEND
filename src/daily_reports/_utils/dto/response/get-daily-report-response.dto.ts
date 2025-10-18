@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { OpenedWindowsDurationDto } from '../../../../_utils/dto/opened-windows-duration.dto';
+import { GetTemperatureMeasureResponseDto } from '../../../../temperature_measures/_utils/dto/response/get-temperature-measure-response.dto';
+import { GetHumidityMeasureResponseDto } from '../../../../humidity_measures/_utils/dto/response/get-humidity-measure-response.dto';
 
 export class DailyReportResponseDto {
   @ApiProperty()
@@ -14,11 +16,17 @@ export class DailyReportResponseDto {
   @ApiProperty()
   isSubmitted: boolean;
 
-  @ApiProperty({ type: [String] })
-  temperatureMeasurements: string[];
+  @ApiProperty({
+    type: [GetTemperatureMeasureResponseDto],
+    description: 'Liste des mesures de température (objets complets)',
+  })
+  temperatureMeasurements: GetTemperatureMeasureResponseDto[] | string[];
 
-  @ApiProperty({ type: [String] })
-  humidityMeasurements: string[];
+  @ApiProperty({
+    type: [GetHumidityMeasureResponseDto],
+    description: "Liste des mesures d'humidité (objets complets)",
+  })
+  humidityMeasurements: GetHumidityMeasureResponseDto[] | string[];
 
   @ApiProperty({ type: [OpenedWindowsDurationDto] })
   openedWindowsDurations: OpenedWindowsDurationDto[];

@@ -9,14 +9,15 @@ export class DailyReportsRepository {
 
   async create(data: Partial<DailyReport>): Promise<DailyReportDocument> {
     const created = new this.dailyReportModel(data);
-    return created.save();
+    const saved = await created.save();
+    return this.populateDocument(saved);
   }
 
   async findAll(): Promise<DailyReportDocument[]> {
     return this.dailyReportModel
       .find()
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .populate('predictionOfTheDay')
       .exec();
   }
@@ -24,8 +25,8 @@ export class DailyReportsRepository {
   async findById(id: string): Promise<DailyReportDocument | null> {
     return this.dailyReportModel
       .findById(id)
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .populate('predictionOfTheDay')
       .exec();
   }
@@ -33,8 +34,8 @@ export class DailyReportsRepository {
   async findByHotHouseId(hotHouseId: string): Promise<DailyReportDocument[]> {
     return this.dailyReportModel
       .find({ hotHouseId })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .populate('predictionOfTheDay')
       .sort({ date: -1 })
       .exec();
@@ -50,6 +51,8 @@ export class DailyReportsRepository {
         hotHouseId,
         date: { $gte: startDate, $lte: endDate },
       })
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .exec();
   }
 
@@ -58,8 +61,8 @@ export class DailyReportsRepository {
       .find({
         date: { $gte: startDate, $lte: endDate },
       })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .populate('predictionOfTheDay')
       .exec();
   }
@@ -67,43 +70,57 @@ export class DailyReportsRepository {
   async update(id: string, data: Partial<DailyReport>): Promise<DailyReportDocument | null> {
     return this.dailyReportModel
       .findByIdAndUpdate(id, data, { new: true })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
+      .populate('temperatureMeasurements') // ✅ Populate
+      .populate('humidityMeasurements') // ✅ Populate
       .populate('predictionOfTheDay')
       .exec();
   }
 
   async addTemperatureMeasure(reportId: string, measureId: string): Promise<DailyReportDocument | null> {
-    return this.dailyReportModel
+    const updated = await this.dailyReportModel
       .findByIdAndUpdate(reportId, { $addToSet: { temperatureMeasurements: measureId } }, { new: true })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
-      .populate('predictionOfTheDay')
       .exec();
+
+    if (updated) {
+      return this.populateDocument(updated); // ✅ Populate après update
+    }
+    return null;
   }
 
   async addHumidityMeasure(reportId: string, measureId: string): Promise<DailyReportDocument | null> {
-    return this.dailyReportModel
+    const updated = await this.dailyReportModel
       .findByIdAndUpdate(reportId, { $addToSet: { humidityMeasurements: measureId } }, { new: true })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
-      .populate('predictionOfTheDay')
       .exec();
+
+    if (updated) {
+      return this.populateDocument(updated); // ✅ Populate après update
+    }
+    return null;
   }
 
   async addOpenedWindow(
     reportId: string,
     window: { hotHouseId: string; openWindowTime: string; closeWindowTime: string },
   ): Promise<DailyReportDocument | null> {
-    return this.dailyReportModel
+    const updated = await this.dailyReportModel
       .findByIdAndUpdate(reportId, { $push: { openedWindowsDurations: window } }, { new: true })
-      .populate('temperatureMeasurements')
-      .populate('humidityMeasurements')
-      .populate('predictionOfTheDay')
       .exec();
+
+    if (updated) {
+      return this.populateDocument(updated); // ✅ Populate après update
+    }
+    return null;
   }
 
   async delete(id: string): Promise<DailyReportDocument | null> {
     return this.dailyReportModel.findByIdAndDelete(id).exec();
+  }
+
+  private async populateDocument(doc: DailyReportDocument): Promise<DailyReportDocument> {
+    return doc.populate([
+      { path: 'temperatureMeasurements' },
+      { path: 'humidityMeasurements' },
+      { path: 'predictionOfTheDay' },
+    ]);
   }
 }
