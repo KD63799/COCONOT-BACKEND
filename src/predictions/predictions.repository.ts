@@ -35,4 +35,7 @@ export class PredictionsRepository {
   async delete(id: string): Promise<PredictionDocument | null> {
     return this.predictionModel.findByIdAndDelete(id).exec();
   }
+  async deleteAll() {
+    this.predictionModel.deleteMany().exec();
+  }
 }

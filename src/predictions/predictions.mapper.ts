@@ -24,7 +24,7 @@ export class PredictionMapper {
     return {
       hotHouseId: createDto.hotHouseId as any,
       openedWindowsDurationsPredicted: createDto.openedWindowsDurationsPredicted,
-      predictionDate: createDto.predictionDate,
+      predictionDate: new Date(createDto.predictionDate),
     };
   }
 }

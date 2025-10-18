@@ -67,6 +67,7 @@ export class PredictionsService {
   }
 
   async remove(id: string): Promise<void> {
+    await this.repository.deleteAll();
     const deleted = await this.repository.delete(id);
     if (!deleted) {
       throw new NotFoundException(`Prediction with ID ${id} not found`);
